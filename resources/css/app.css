@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add this to your app.css or a custom CSS file */
+.required::before {
+    content: "*";
+    color: red;
+    margin-right: 0.25rem; /* Adjust the spacing as needed */
+}
+/* public/css/app.css */
+svg {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+}
