@@ -1,13 +1,25 @@
 <?php
 
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('login');
 });
+
+// email verification
+Route::get('/email/verify', function () {
+    return view('auth.verify-email');
+})->middleware('auth')->name('verification.notice');
+
+// account activation
+Route::get('activate-account/{token}', [RegisteredUserController::class, 'activateAccount'])->name('activate-account');
+Route::post('activate-account/{token}', [RegisteredUserController::class, 'setPassword'])->name('set-password');
+
 
 Route::get('/dashboard', function () {
     return view('dashboard');
