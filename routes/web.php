@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\EventsController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Models\Event;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Route;
 
@@ -46,6 +48,15 @@ Route::middleware(['role:super-admin|admin'])->group(function () {
 
     Route::resource('users', UserController::class);
     Route::get('users/{userId}/delete', [UserController::class, 'destroy']);
+
+
+    // events
+    Route::resource('events', \App\Http\Controllers\EventsController::class);
+    Route::get('events/{eventId}/delete', [\App\Http\Controllers\EventsController::class, 'destroy']);
+    Route::get('events/{jobId}', [EventsController::class, 'show'])->name('events.show');
+    Route::get('events.search', [EventsController::class, 'edit'])->name('events.search');
+
+
 });
 
 require __DIR__ . '/auth.php';

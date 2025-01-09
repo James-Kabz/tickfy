@@ -1,5 +1,10 @@
 <x-app-layout>
-    <div class="container mx-auto mt-2 px-4">
+        <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Users') }}
+        </h2>
+    </x-slot>
+    <div class="max-w-7xl mx-auto mt-2 px-4">
         <div class="flex flex-col">
             <div class="w-full">
                 @if (session('status'))

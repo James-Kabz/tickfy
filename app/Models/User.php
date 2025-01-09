@@ -49,4 +49,21 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
         ];
     }
+
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
+
+    public function ticketTypes()
+    {
+        return $this->hasMany(TicketType::class);
+    }
+
+    // In App\Models\User.php
+
+    public function getId()
+    {
+        return $this->id;
+    }
 }
