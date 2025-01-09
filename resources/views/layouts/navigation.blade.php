@@ -19,10 +19,20 @@
                         <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*')">
                             {{ __('Roles') }}
                         </x-nav-link>
-                    @endcan
+                    @endcan                    
                     @can('view permission')
-                        <x-nav-link :href="route('permissions.index')" :active="request()->routeIs('permission.*')">
+                        <x-nav-link :href="route('permissions.index')" :active="request()->routeIs('permissions.*')">
                             {{ __('Permissions') }}
+                        </x-nav-link>
+                    @endcan                    
+                    @can('view user')
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                            {{ __('Users') }}
+                        </x-nav-link>
+                    @endcan   
+                    @can('view event')
+                        <x-nav-link :href="route('events.index')" :active="request()->routeIs('events.*')">
+                            {{ __('Events') }}
                         </x-nav-link>
                     @endcan
                 </div>

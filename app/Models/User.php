@@ -23,7 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name',
         'email',
-        'activation_token',
+        // 'activation_token',
         'password',
     ];
 
@@ -48,5 +48,22 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
+
+    public function ticketTypes()
+    {
+        return $this->hasMany(TicketType::class);
+    }
+
+    // In App\Models\User.php
+
+    public function getId()
+    {
+        return $this->id;
     }
 }
