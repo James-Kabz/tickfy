@@ -15,12 +15,16 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*')">
-                        {{ __('Roles') }}
-                    </x-nav-link>
-                    <x-nav-link :href="route('permissions.index')" :active="request()->routeIs('permission.*')">
-                        {{ __('Permissions') }}
-                    </x-nav-link>
+                    @can('view role')
+                        <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles.*')">
+                            {{ __('Roles') }}
+                        </x-nav-link>
+                    @endcan
+                    @can('view permission')
+                        <x-nav-link :href="route('permissions.index')" :active="request()->routeIs('permission.*')">
+                            {{ __('Permissions') }}
+                        </x-nav-link>
+                    @endcan
                 </div>
             </div>
 
