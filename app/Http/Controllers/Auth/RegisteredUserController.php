@@ -19,46 +19,46 @@ class RegisteredUserController extends Controller
 
     // activate account
 
-    public function activateAccount($token)
-    {
-        $user = User::where('activation_token', $token)->first();
-        if (!$user) {
-            return redirect('/')->with('error', 'Invalid activation token');
-        }
+    // public function activateAccount($token)
+    // {
+    //     $user = User::where('activation_token', $token)->first();
+    //     if (!$user) {
+    //         return redirect('/')->with('error', 'Invalid activation token');
+    //     }
 
-        return view('auth.activate', ['token' => $token]);
-    }
+    //     return view('auth.activate', ['token' => $token]);
+    // }
 
 
     // set password
-    public function setPassword(Request $request, $token)
-    {
-        $user = User::where('activation_token', $token)->first();
+    // public function setPassword(Request $request, $token)
+    // {
+    //     $user = User::where('activation_token', $token)->first();
 
-        if (!$user) {
-            return redirect('/')->with('error', 'Invalid activation token');
-        }
+    //     if (!$user) {
+    //         return redirect('/')->with('error', 'Invalid activation token');
+    //     }
 
-        $request->validate([
-            'password' => [
-                'required',
-                'string',
-                'min:8',
-                'regex:/[A-Z]/',
-                'regex:/[a-z]/',
-                'regex:/[0-9]/',
-                'regex:/[\W]/',
-                'confirmed',
-            ],
-        ]);
+    //     $request->validate([
+    //         'password' => [
+    //             'required',
+    //             'string',
+    //             'min:8',
+    //             'regex:/[A-Z]/',
+    //             'regex:/[a-z]/',
+    //             'regex:/[0-9]/',
+    //             'regex:/[\W]/',
+    //             'confirmed',
+    //         ],
+    //     ]);
 
-        $user->password = Hash::make($request->password);
-        $user->activation_token = null;
-        $user->email_verified_at = now();
-        $user->save();
+    //     $user->password = Hash::make($request->password);
+    //     $user->activation_token = null;
+    //     $user->email_verified_at = now();
+    //     $user->save();
 
-        return redirect('login')->with('success', 'Account activated. You can now log in');
-    }
+    //     return redirect('login')->with('success', 'Account activated. You can now log in');
+    // }
     /**
      * Display the registration view.
      */
@@ -84,20 +84,20 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'activation_token' => Str::random(60),
+            // 'activation_token' => Str::random(60),
 
         ]);
 
-        // event(new Registered($user));`
-        $user->notify(new AccountActivation($user));
+        event(new Registered($user));
+        // $user->notify(new AccountActivation($user));
 
         Auth::login($user);
 
         return redirect(route('dashboard', absolute: false));
     }
 
-    public function resendActivationEmail($user)
-    {
-        $user->notify(new AccountActivation($user));
-    }
+    // public function resendActivationEmail($user)
+    // {
+    //     $user->notify(new AccountActivation($user));
+    // }
 }

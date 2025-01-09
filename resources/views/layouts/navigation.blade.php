@@ -24,7 +24,12 @@
                         <x-nav-link :href="route('permissions.index')" :active="request()->routeIs('permission.*')">
                             {{ __('Permissions') }}
                         </x-nav-link>
-                    @endcan
+                    @endcan                    
+                    {{-- @can('view permission') --}}
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('permission.*')">
+                            {{ __('Users') }}
+                        </x-nav-link>
+                    {{-- @endcan --}}
                 </div>
             </div>
 
