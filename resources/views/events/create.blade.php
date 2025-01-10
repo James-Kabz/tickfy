@@ -2,8 +2,7 @@
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Create Event') }}
-            <a href="{{ url('events') }}"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded float-right">Back</a>
+            <a href="{{ url('events') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded float-right">Back</a>
         </h2>
     </x-slot>
 
@@ -14,7 +13,7 @@
                     <form action="{{ route('events.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="mb-4">
-                            <label for="name" class="block text-gray-700">Name</label>
+                            <label for="name" class="block text-gray-700">Event Name</label>
                             <input type="text" name="name" id="name" class="w-full border-gray-300 rounded-lg" value="{{ old('name') }}">
                             @error('name') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
                         </div>
@@ -56,6 +55,28 @@
                         </div>
 
                         <div class="mb-4">
+                            <label class="block text-gray-700">Ticket Types</label>
+                            <div id="ticket-types-container">
+                                <div class="ticket-type mb-4">
+                                    <input type="text" name="ticket_types[][name]" class="w-full border-gray-300 rounded-lg mb-2" placeholder="Ticket Type Name" required>
+                                    <input type="number" name="ticket_types[][price]" class="w-full border-gray-300 rounded-lg mb-2" placeholder="Price" required>
+                                    <input type="checkbox" name="ticket_types[][complimentary]" class="mr-2" value="1"> Complimentary
+                                    <input type="checkbox" name="ticket_types[][active]" class="mr-2" value="1" checked> Active
+                                    <select name="ticket_types[][user_id]" class="w-full border-gray-300 rounded-lg mb-2" required>
+                                        <option value="">Select User</option>
+                                        <!-- Assuming you have a list of users available in the blade file -->
+                                        @foreach($users as $user)
+                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="button" class="remove-ticket-type bg-red-500 text-white font-bold py-2 px-3 rounded mt-2">Remove</button>
+                                </div>
+                            </div>
+                            <button type="button" id="add-ticket-type" class="bg-green-500 text-white font-bold py-2 px-3 rounded mt-4">Add Ticket Type</button>
+                            @error('ticket_types') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="mb-4">
                             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Create Event</button>
                         </div>
                     </form>
@@ -63,4 +84,32 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('add-ticket-type').addEventListener('click', function () {
+            const container = document.getElementById('ticket-types-container');
+            const ticketTypeHTML = `
+                <div class="ticket-type mb-4">
+                    <input type="text" name="ticket_types[][name]" class="w-full border-gray-300 rounded-lg mb-2" placeholder="Ticket Type Name" required>
+                    <input type="number" name="ticket_types[][price]" class="w-full border-gray-300 rounded-lg mb-2" placeholder="Price" required>
+                    <input type="checkbox" name="ticket_types[][complimentary]" class="mr-2" value="1"> Complimentary
+                    <input type="checkbox" name="ticket_types[][active]" class="mr-2" value="1" checked> Active
+                    <select name="ticket_types[][user_id]" class="w-full border-gray-300 rounded-lg mb-2" required>
+                        <option value="">Select User</option>
+                        @foreach($users as $user)
+                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="remove-ticket-type bg-red-500 text-white font-bold py-2 px-3 rounded mt-2">Remove</button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', ticketTypeHTML);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target && e.target.classList.contains('remove-ticket-type')) {
+                e.target.closest('.ticket-type').remove();
+            }
+        });
+    </script>
 </x-app-layout>

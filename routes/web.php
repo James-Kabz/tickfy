@@ -5,6 +5,7 @@ use App\Http\Controllers\EventsController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\TicketTypesController;
 use App\Http\Controllers\UserController;
 use App\Models\Event;
 use Illuminate\Auth\Events\Registered;
@@ -56,6 +57,9 @@ Route::middleware(['role:super-admin|admin'])->group(function () {
     Route::get('events/{jobId}', [EventsController::class, 'show'])->name('events.show');
     Route::get('events.search', [EventsController::class, 'edit'])->name('events.search');
 
+    // ticket types
+    Route::resource('ticket-types', TicketTypesController::class);
+    Route::get('ticket-types/{ticketType}/delete', [\App\Http\Controllers\TicketTypesController::class, 'destroy']);
 
 });
 
