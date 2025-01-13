@@ -2,8 +2,11 @@
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             {{ __('Tickets for Event: ' . $event->name) }}
-            <a href="{{ url('events') }}"
-                class="bg-blue-500 hover:bg-blue-700  text-white font-bold py-2 px-3 rounded float-right">Back</a>
+            <a href="{{ url()->previous() }}"
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded float-right">
+                Back
+            </a>
+
         </h2>
     </x-slot>
 

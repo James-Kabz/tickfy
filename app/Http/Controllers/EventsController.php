@@ -27,7 +27,7 @@ class EventsController extends Controller
         return view('events.show', ['event' => $event]);
     }
 
-    public function create(Event $job)
+    public function create()
     {
         $events = Event::all();
         $users = User::all();
