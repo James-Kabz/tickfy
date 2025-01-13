@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Event extends Model
 {
@@ -30,6 +31,15 @@ class Event extends Model
     public function tickets()
     {
         return $this->hasMany(Ticket::class);
+    }
+
+
+    public function getTicketStatusAttribute()
+    {
+        $now = Carbon::now();
+        $startTime = Carbon::parse($this->start_time); // Assuming `start_time` is a datetime field in your table.
+
+        return $now->lessThan($startTime) ? 'Open' : 'Closed';
     }
 
 }

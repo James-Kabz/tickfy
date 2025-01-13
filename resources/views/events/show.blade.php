@@ -66,6 +66,41 @@
                     </p>
                 </div>
 
+                <p class="flex items-center space-x-2">
+                    <span class="font-bold">Status:</span>
+                    @if ($event->ticket_status === 'Open')
+                        <span class="px-3 py-1 text-sm font-semibold text-green-700 bg-green-100 rounded-full">
+                            Tickets Open
+                        </span>
+                    @elseif ($event->ticket_status === 'Closed')
+                        <span class="px-3 py-1 text-sm font-semibold text-red-700 bg-red-100 rounded-full">
+                            Tickets Closed
+                        </span>
+                    @elseif ($event->ticket_status === 'Ongoing')
+                        <span class="px-3 py-1 text-sm font-semibold text-yellow-700 bg-yellow-100 rounded-full">
+                            Event Ongoing
+                        </span>
+                    @else
+                        <span class="px-3 py-1 text-sm font-semibold text-gray-700 bg-gray-100 rounded-full">
+                            Inactive
+                        </span>
+                    @endif
+                </p>
+
+                @if ($event->ticketTypes->isNotEmpty())
+                    <ul>
+                        @foreach ($event->ticketTypes as $ticketType)
+                            <li>
+                                {{ $ticketType->name }} - Kshs{{ $ticketType->price }}
+                                @if ($ticketType->complimentary)
+                                    (Complimentary)
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="text-red-500">No ticket types available for this event.</p>
+                @endif
 
                 <!-- Actions -->
                 <div class="flex flex-row space-x-5 ">
