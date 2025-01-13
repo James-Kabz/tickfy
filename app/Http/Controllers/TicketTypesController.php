@@ -31,7 +31,8 @@ class TicketTypesController extends Controller
         $data = $request->validate([
             'ticket_types.*.name' => 'required|string',
             'ticket_types.*.price' => 'required|numeric|min:0',
-            'ticket_types.*.complimentary' => 'required|boolean',
+            'ticket_types.*.complimentary' => '
+            |boolean',
             'ticket_types.*.active' => 'required|boolean',
             'ticket_types.*.user_id' => 'required|exists:users,id',
         ]);

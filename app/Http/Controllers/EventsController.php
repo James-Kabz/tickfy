@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\Auth;
 
 class EventsController extends Controller
 {
+    public function welcome()
+    {
+        $events = Event::orderBy('created_at', 'asc')->take(6)->get(); // Fetch the next 6 upcoming events
+        return view('welcome', ['events' => $events]);
+    }
+
     public function index()
     {
         $events = Event::with('ticketTypes')->orderBy('created_at', 'desc')->get();
@@ -66,9 +72,9 @@ class EventsController extends Controller
             ->with('success', 'Event created successfully. Now, add ticket types.');
     }
 
-    public function edit($id)
+    public function edit(Event $event)
     {
-        $event = Event::findOrFail($id);
+        $event = Event::findOrFail($event);
         return view('events.edit', ['event' => $event]);
     }
 

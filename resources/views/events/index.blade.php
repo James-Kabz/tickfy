@@ -34,8 +34,6 @@
                     </div>
                 @endif
 
-
-
                 @if ($events->isEmpty())
                     <div
                         class="flex mt-5 items-center ml-20 justify-center p-6 bg-blue-100 border border-solid border-blue-600 text-blue-700 text-center font-bold rounded-lg shadow-lg">
@@ -46,9 +44,7 @@
                         @foreach ($events as $event)
                             <div
                                 class="bg-white shadow-md rounded-lg overflow-hidden transition transform hover:bg-gray-300 hover:-translate-y-1">
-
                                 <a href="{{ route('events.show', $event->id) }}" class="flex items-center p-4">
-                                    <!-- Event Details -->
                                     <div class="flex-grow">
                                         @if ($event->image)
                                             <div class="flex justify-center mt-8">
@@ -66,16 +62,12 @@
                                         </h1>
                                         <hr>
                                         <h1 class="text-xl text-center text-blue-400">{{ $event->location }}</h1>
-                                        </h1>
                                         <div class="grid grid-cols-1 mt-20">
                                             @if ($event->ticketTypes->isNotEmpty())
                                                 <ul>
                                                     @foreach ($event->ticketTypes as $ticketType)
                                                         <li class="text-red-500 text-xl">
-                                                            {{ $ticketType->name }} - ${{ $ticketType->price }}
-                                                            @if ($ticketType->complimentary)
-                                                                (Complimentary)
-                                                            @endif
+                                                            {{ $ticketType->name }} - Kshs{{ $ticketType->price }}
                                                         </li>
                                                     @endforeach
                                                 </ul>
@@ -85,6 +77,16 @@
                                         </div>
                                     </div>
                                 </a>
+
+                                {{-- Add the button to show tickets purchased for the event --}}
+                                @can('view tickets')
+                                    <div class="p-4 text-center">
+                                        <a href="{{ route('tickets.show', $event->id) }}"
+                                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                                            View Purchased Tickets
+                                        </a>
+                                    </div>
+                                @endcan
                             </div>
                         @endforeach
                     </div>

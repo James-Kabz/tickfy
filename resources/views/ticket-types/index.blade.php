@@ -11,10 +11,10 @@
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-semibold">All Ticket Types</h3>
                     <!-- Button to Create Ticket Type -->
-                    <a href="{{ route('ticket-types.create') }}"
+                    {{-- <a href="{{ route('ticket-types.create') }}"
                        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
                         Create Ticket Type
-                    </a>
+                    </a> --}}
                 </div>
 
                 <table class="min-w-full bg-white border border-gray-300">
@@ -45,7 +45,7 @@
                                 <td class="py-2 px-4 flex space-x-2">
                                     <!-- Edit Button -->
                                     <a href="{{ route('ticket-types.edit', $ticketType->id) }}"
-                                       class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                                        class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
                                         Edit
                                     </a>
                                     <!-- Delete Button -->
@@ -53,8 +53,8 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                                class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
-                                                onclick="return confirm('Are you sure you want to delete this ticket type?')">
+                                            class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600"
+                                            onclick="return confirm('Are you sure you want to delete this ticket type?')">
                                             Delete
                                         </button>
                                     </form>
