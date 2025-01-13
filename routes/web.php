@@ -56,6 +56,10 @@ Route::middleware(['role:super-admin|admin'])->group(function () {
     Route::get('events/{eventId}/delete', [\App\Http\Controllers\EventsController::class, 'destroy']);
     Route::get('events/{jobId}', [EventsController::class, 'show'])->name('events.show');
     Route::get('events.search', [EventsController::class, 'edit'])->name('events.search');
+    Route::get('/events/{event}/ticket-types/create', [TicketTypesController::class, 'create'])->name('events.ticket-types.create');
+    Route::post('/events/{event}/ticket-types', [TicketTypesController::class, 'store'])->name('events.ticket-types.store');
+
+
 
     // ticket types
     Route::resource('ticket-types', TicketTypesController::class);

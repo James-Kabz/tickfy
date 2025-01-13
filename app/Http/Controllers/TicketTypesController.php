@@ -17,25 +17,29 @@ class TicketTypesController extends Controller
         return view('ticket-types.index', ['ticketTypes' => $ticketTypes]);
     }
 
-    public function create()
+    public function create($eventId)
     {
-        $events = Event::all();
+        $event = Event::findOrFail($eventId);
         $users = User::all();
-        return view('ticket-types.create', ['events' => $events], ['users' => $users]);
+        return view('ticket-types.create', ['event' => $event], ['users' => $users]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request,$eventId)
     {
+        $event = Event::findOrFail($eventId);
+
         $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'complimentary' => 'required|boolean',
-            'active' => 'required|boolean',
-            'event_id' => 'required|exists:events,id',
-            'user_id' => 'required|exists:users,id',
+            'ticket_types.*.name' => 'required|string',
+            'ticket_types.*.price' => 'required|numeric|min:0',
+            'ticket_types.*.complimentary' => 'required|boolean',
+            'ticket_types.*.active' => 'required|boolean',
+            'ticket_types.*.user_id' => 'required|exists:users,id',
         ]);
 
-        TicketType::create($data);
+        foreach ($data['ticket_types'] as $ticketType) {
+            $event->ticketTypes()->create($ticketType);
+        }
+
 
         return redirect('ticket-types')->with('success', 'Ticket type created successfully.');
     }

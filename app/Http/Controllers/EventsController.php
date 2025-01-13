@@ -11,7 +11,7 @@ class EventsController extends Controller
 {
     public function index()
     {
-        $events = Event::orderBy('created_at', 'desc')->get();
+        $events = Event::with('ticketTypes')->orderBy('created_at', 'desc')->get();
         return view('events.index', ['events' => $events]);
     }
 
@@ -44,11 +44,6 @@ class EventsController extends Controller
             'end_time' => 'required|date|after:start_time',
             'location' => 'required',
             'image' => 'nullable|file|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'ticket_types.*.name' => 'required|string',
-            'ticket_types.*.price' => 'required|numeric|min:0',
-            'ticket_types.*.complimentary' => 'required|boolean',
-            'ticket_types.*.active' => 'required|boolean',
-            'ticket_types.*.user_id' => 'required|exists:users,id',
         ]);
 
         if ($request->hasFile('image')) {
@@ -67,14 +62,8 @@ class EventsController extends Controller
             'user_id' => Auth::id(),
         ]);
 
-        // Create ticket types dynamically
-        if ($request->has('ticket_types')) {
-            foreach ($request->ticket_types as $ticketType) {
-                $event->ticketTypes()->create(array_merge($ticketType, ['event_id' => $event->id]));
-            }
-        }
-
-        return redirect()->route('events.index')->with('success', 'Event created successfully');
+        return redirect()->route('events.ticket-types.create', $event->id)
+            ->with('success', 'Event created successfully. Now, add ticket types.');
     }
 
     public function edit($id)

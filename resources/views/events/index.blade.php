@@ -6,8 +6,7 @@
             </h2>
             <form action="{{ route('events.search') }}" method="GET" class="mb-3 lg:mb-0">
                 <input type="text" name="find"
-                    class="py-2 px-6 text-gray-900 font-bold border rounded-lg w-48 lg:w-64"
-                    placeholder="Search by Name">
+                    class="py-2 px-6 text-gray-900 font-bold border rounded-lg w-48 lg:w-64" placeholder="Search by Name">
                 <button type="submit"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg">Search</button>
             </form>
@@ -55,26 +54,34 @@
                                             <div class="flex justify-center mt-8">
                                                 <div class="rounded-xl p-1">
                                                     <img src="{{ asset('storage/' . $event->image) }}" alt="Event Image"
-                                                        class="w-96 h-48 lg:w-96 lg:h-60 rounded-xl mx-auto">
+                                                        class="w-96 lg:w-96 lg:h-60 rounded-xl mx-auto">
                                                 </div>
                                             </div>
                                         @endif
+                                        <span class="uppercase text-sm md:text-lg lg:text-xl text-gray-600">
+                                            {{ \Carbon\Carbon::parse($event->start_time)->format('F j, Y g:i A') }}
+                                        </span>
                                         <h1 class="text-2xl font-extrabold text-blue-500 text-center">
                                             {{ $event->name }}
                                         </h1>
                                         <hr>
                                         <h1 class="text-xl text-center text-blue-400">{{ $event->location }}</h1>
-                                        <h1 class="text-center"><i class="fas fa-calendar"></i> {{ $event->date }}
                                         </h1>
-                                        <div class="grid grid-cols-2">
-                                            <span><i class="fas fa-clock"></i>
-                                                {{ \Carbon\Carbon::parse($event->start_time)->format('F j, Y g:i A') }}
-                                                -
-                                                {{ \Carbon\Carbon::parse($event->end_time)->format('F j, Y g:i A') }}
-                                            </span>
-                                            <h3 class="border border-solid rounded-xl border-gray-900 text-center">
-                                                Created {{ $event->created_at->diffForHumans() }}
-                                            </h3>
+                                        <div class="grid grid-cols-1 mt-20">
+                                            @if ($event->ticketTypes->isNotEmpty())
+                                                <ul>
+                                                    @foreach ($event->ticketTypes as $ticketType)
+                                                        <li class="text-red-500 text-xl">
+                                                            {{ $ticketType->name }} - ${{ $ticketType->price }}
+                                                            @if ($ticketType->complimentary)
+                                                                (Complimentary)
+                                                            @endif
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                <p>No ticket types available for this event.</p>
+                                            @endif
                                         </div>
                                     </div>
                                 </a>
