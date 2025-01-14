@@ -110,7 +110,7 @@
             @if ($event->ticket_status === 'Open')
                 <div class="w-full md:w-1/2 bg-white shadow-md rounded-lg p-6">
                     <h2 class="text-2xl font-semibold mb-4">Book Your Tickets</h2>
-                    <form action="{{ route('tickets.store', $event->id) }}" method="POST" id="bookingForm">
+                    <form action="{{ route('payment.show', $event->id) }}" method="GET" id="bookingForm">
                         @csrf
                         <table class="table-auto w-full border border-gray-300 mb-4">
                             <thead>
@@ -150,7 +150,6 @@
                             <h3 class="text-lg font-bold">Total:</h3>
                             <h3 class="text-lg font-bold" id="grandTotal">KES 0.00</h3>
                         </div>
-
                         <div class="mb-4">
                             <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
                             <input type="text" id="name" name="name"
@@ -170,6 +169,7 @@
                                 class="mt-1 w-full border-gray-300 rounded-lg" required>
                         </div>
 
+                        <input type="hidden" name="grand_total" id="grand_total_input" value="0">
                         <button type="submit" class="bg-blue-500 text-white font-bold py-2 px-4 rounded w-full">
                             Book Now
                         </button>
@@ -180,6 +180,7 @@
                     Tickets are not available for this event.
                 </div>
             @endif
+
 
         </div>
     </div>

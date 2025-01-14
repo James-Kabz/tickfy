@@ -2,12 +2,15 @@
 
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\EventsController;
+use App\Http\Controllers\MpesaController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TicketsController;
 use App\Http\Controllers\TicketTypesController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
@@ -79,5 +82,19 @@ Route::middleware(['role:super-admin|admin'])->group(function () {
     Route::resource('ticket-types', TicketTypesController::class);
     Route::get('ticket-types/{ticketType}/delete', [TicketTypesController::class, 'destroy']);
 });
+
+
+Route::post('/mpesa/callback', function (Request $request) {
+    // Handle MPesa payment confirmation
+    \Illuminate\Support\Facades\Log::info('MPesa Callback:', $request->all());
+    return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Payment received successfully']);
+})->name('mpesa.callback');
+
+Route::post('/payment', [PaymentController::class, 'initiatePayment'])->name('payment.initiatePayment');
+
+
+Route::get('/payment/{event}', [PaymentController::class, 'show'])->name('payment.show');
+
+
 
 require __DIR__ . '/auth.php';
