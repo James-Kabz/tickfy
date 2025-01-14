@@ -3,58 +3,29 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 class PaymentConfirmationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * Create a new message instance.
-     */
-    public $amount;
-    public function __construct($amount)
+    public $customerDetails;
+    public $callbackData;
+
+    public function __construct($customerDetails, $callbackData)
     {
-        $this->amount = $amount;
+        $this->customerDetails = $customerDetails;
+        $this->callbackData = $callbackData;
     }
 
     public function build()
     {
         return $this->subject('Payment Confirmation')
-        ->view('emails.payment_confirmation')
-        ->with(['amount' => $this->amount]);
-    }
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Payment Confirmation Mail',
-        );
-    }
-
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            view: 'view.name',
-        );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
+            ->view('emails.payment_confirmation')
+            ->with([
+                'customerDetails' => $this->customerDetails,
+                'callbackData' => $this->callbackData,
+            ]);
     }
 }

@@ -58,7 +58,7 @@
 
         <h3 class="text-lg font-bold text-right mb-4">Total Amount: KES {{ number_format($grandTotal, 2) }}</h3>
 
-        <form action="{{ route('payment.initiatePayment') }}" method="POST" class="border-t pt-4">
+        <form action="{{ route('payments.initiateStkPush') }}" method="GET" class="border-t pt-4">
             @csrf
             <input type="hidden" name="event_id" value="{{ $event->id }}">
             <input type="hidden" name="grand_total" value="{{ $grandTotal }}">

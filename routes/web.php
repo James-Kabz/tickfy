@@ -83,15 +83,10 @@ Route::middleware(['role:super-admin|admin'])->group(function () {
     Route::get('ticket-types/{ticketType}/delete', [TicketTypesController::class, 'destroy']);
 });
 
-
-Route::post('/mpesa/callback', function (Request $request) {
-    // Handle MPesa payment confirmation
-    \Illuminate\Support\Facades\Log::info('MPesa Callback:', $request->all());
-    return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Payment received successfully']);
-})->name('mpesa.callback');
-
 Route::post('/payment', [PaymentController::class, 'initiatePayment'])->name('payment.initiatePayment');
-
+Route::get('/token', [PaymentController::class, 'token'])->name('token');
+Route::get('payments.initiateStkPush', [PaymentController::class, 'initiateStkPush'])->name('payments.initiateStkPush');
+Route::post('/payments/stkcallback', [PaymentController::class, 'stkcallback'])->name('payments.stkcallback');
 
 Route::get('/payment/{event}', [PaymentController::class, 'show'])->name('payment.show');
 
