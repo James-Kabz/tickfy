@@ -50,7 +50,8 @@
                         <td class="py-2 px-4 border-b">{{ $event->ticketTypes->find($ticketTypeId)->name }}</td>
                         <td class="text-center py-2 px-4 border-b">{{ $details['quantity'] }}</td>
                         <td class="text-center py-2 px-4 border-b">KES {{ number_format($details['price'], 2) }}</td>
-                        <td class="text-right py-2 px-4 border-b">KES {{ number_format($details['quantity'] * $details['price'], 2) }}</td>
+                        <td class="text-right py-2 px-4 border-b">KES
+                            {{ number_format($details['quantity'] * $details['price'], 2) }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -58,14 +59,16 @@
 
         <h3 class="text-lg font-bold text-right mb-4">Total Amount: KES {{ number_format($grandTotal, 2) }}</h3>
 
-        <form action="{{ route('payments.initiateStkPush') }}" method="GET" class="border-t pt-4">
+        <form action="{{ secure_url('payments/initiateStkPush') }}" method="GET">
             @csrf
             <input type="hidden" name="event_id" value="{{ $event->id }}">
             <input type="hidden" name="grand_total" value="{{ $grandTotal }}">
-            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Provide your Mpesa [KE] Mobile Number</label>
+            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Provide your Mpesa [KE] Mobile
+                Number</label>
             <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden mb-4">
                 <span class="bg-gray-100 px-4 py-2 text-gray-600">+254</span>
-                <input type="text" id="phone" name="phone" class="flex-1 px-4 py-2 focus:outline-none" placeholder="740XXXXXX" required>
+                <input type="text" id="phone" name="phone" class="flex-1 px-4 py-2 focus:outline-none"
+                    placeholder="740XXXXXX" required>
             </div>
             <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                 Proceed

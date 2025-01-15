@@ -44,6 +44,13 @@ class TicketsController extends Controller
         );
     }
 
+    public function view($ticketId)
+    {
+        $ticket = Ticket::findOrFail($ticketId);
+        $eventName = $ticket->event->name;
+        return view('ticket.confirmation', compact('ticket','eventName'));
+    }
+
     /**
      * Store a newly created ticket booking in storage.
      */

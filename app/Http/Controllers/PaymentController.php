@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\PaymentConfirmationMail;
 use App\Models\Event;
 use App\Models\StkRequest;
+use App\Models\Ticket;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
@@ -42,17 +43,23 @@ class PaymentController extends Controller
                     return $response->json()['access_token'];
           }
 
-          public function initiateStkPush()
+          public function paymentStatus()
           {
-                    $accessToken = $this->token();
-                    $url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
+                    return view('ticket.status', ['message' => session('message')]);
+          }
 
-                    $PhoneNumber = 254740289578;
-                    $Amount = 1;
-                    $AccountReference = 'Tickfy';
-                    $TransactionDesc = 'Payment for Event Ticket';
 
+          public function initiateStkPush(Request $request)
+          {
                     try {
+                              $accessToken = $this->token();
+                              $url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
+
+                              $PhoneNumber = '254740289578';
+                              $Amount = 1;
+                              $AccountReference = 'Tickfy';
+                              $TransactionDesc = 'Payment for Event Ticket';
+
                               $response = Http::withToken($accessToken)->post($url, [
                                         'BusinessShortCode' => env('MPESA_SHORTCODE'),
                                         'Password' => base64_encode(env('MPESA_SHORTCODE') . env('MPESA_PASSKEY') . now()->format('YmdHis')),
@@ -66,39 +73,37 @@ class PaymentController extends Controller
                                         'AccountReference' => $AccountReference,
                                         'TransactionDesc' => $TransactionDesc,
                               ]);
+
+                              if ($response->failed()) {
+                                        return response()->json([
+                                                  'error' => 'Failed to initiate STK Push: ' . $response->body(),
+                                        ], 500);
+                              }
+
+                              $res = $response->json();
+                              if (isset($res['ResponseCode']) && $res['ResponseCode'] == 0) {
+                                        // Save request to database
+                                        StkRequest::create([
+                                                  'phone' => $PhoneNumber,
+                                                  'amount' => $Amount,
+                                                  'reference' => $AccountReference,
+                                                  'description' => $TransactionDesc,
+                                                  'MerchantRequestID' => $res['MerchantRequestID'],
+                                                  'CheckoutRequestID' => $res['CheckoutRequestID'],
+                                                  'status' => 'Requested',
+                                        ]);
+
+                                        // Redirect with success message
+                                        return redirect()->route('ticket.status')->with('message', $res['CustomerMessage']);
+                              }
+
+                              return response()->json(['error' => 'STK Push failed: ' . $res['ResponseDescription']], 500);
                     } catch (Throwable $e) {
-                              return $e->getMessage();
-                    }
-
-                    if ($response->failed()) {
-                              throw new Exception('Failed to obtain access token: ' . $response->body());
-                    }
-
-                    // return $response->json();
-
-                    $res = json_decode($response);
-                    $ResponseCode = $res->ResponseCode;
-                    if ($ResponseCode == 0) {
-                              $MerchantRequestID = $res->MerchantRequestID;
-                              $CheckoutRequestID = $res->CheckoutRequestID;
-                              $CustomerMessage = $res->CustomerMessage;
-
-                              // save to dtabase
-                              $payment = new StkRequest;
-                              $payment->phone = $PhoneNumber;
-                              $payment->amount = $Amount;
-                              $payment->reference = $AccountReference;
-                              $payment->description = $TransactionDesc;
-                              $payment->MerchantRequestID = $MerchantRequestID;
-                              $payment->CheckoutRequestID = $CheckoutRequestID;
-                              $payment->status = 'Requested';
-
-                              $payment->save();
-
-
-                              return $CustomerMessage;
+                              return response()->json(['error' => $e->getMessage()], 500);
                     }
           }
+
+
 
           public function stkCallback(Request $request): JsonResponse
           {
@@ -114,6 +119,11 @@ class PaymentController extends Controller
                     $resultCode = $callbackData['ResultCode'] ?? null;
                     $resultDesc = $callbackData['ResultDesc'] ?? null;
 
+                    if (is_null($checkoutRequestId)) {
+                              Log::channel('mpesa')->error('CheckoutRequestID is missing in the callback.');
+                              return response()->json(['status' => 'error', 'message' => 'Invalid callback data'], 400);
+                    }
+
                     // Handle failed payment callback
                     if ($resultCode !== 0) {
                               Log::channel('mpesa')->error('STK Callback failed with ResultCode: ' . $resultCode . ' - ' . $resultDesc);
@@ -121,19 +131,22 @@ class PaymentController extends Controller
                               // Update payment status to failed in the database
                               $payment = StkRequest::where('CheckoutRequestID', $checkoutRequestId)->first();
                               if ($payment) {
-                                        $payment->status = 'failed';
+                                        $payment->status = 'Failed';
                                         $payment->ResultDesc = $resultDesc;
                                         $payment->save();
                               }
 
-                              return response()->json([
-                                        'status' => 'error',
-                                        'message' => $resultDesc
-                              ], 500);
+                              return response()->json(['status' => 'error', 'message' => $resultDesc], 500);
                     }
 
                     // Handle successful payment callback
                     $callbackMetadata = $callbackData['CallbackMetadata']['Item'] ?? [];
+                    if (empty($callbackMetadata)) {
+                              Log::channel('mpesa')->error('CallbackMetadata is missing or empty.');
+                              return response()->json(['status' => 'error', 'message' => 'Invalid callback metadata'], 400);
+                    }
+
+                    // Initialize metadata fields
                     $amount = null;
                     $transactionDate = null;
                     $mpesaReceiptNumber = null;
@@ -153,42 +166,51 @@ class PaymentController extends Controller
                                         case 'PhoneNumber':
                                                   $msisdn = $this->sanitizeAndFormatMobile($item['Value']);
                                                   break;
-                                        default:
-                                                  // Handle other cases as needed
-                                                  break;
                               }
                     }
 
-                    // Log the processed data for successful payment
-                    Log::channel('mpesa')->info('Processed STK Callback data: ' . json_encode([
-                              'MerchantRequestID' => $merchantRequestId,
-                              'CheckoutRequestID' => $checkoutRequestId,
-                              'amount' => $amount,
-                              'TransactionDate' => $transactionDate,
-                              'MpesaReceiptNumber' => $mpesaReceiptNumber,
-                              'msisdn' => $msisdn
-                    ]));
-
-                    // Save payment details to the database using the MpesaCallback model
+                    // Save payment details to the database
                     $payment = StkRequest::where('CheckoutRequestID', $checkoutRequestId)->first();
-                    if ($payment) {
-                              $payment->status = 'Paid';
-                              $payment->TransactionDate = $transactionDate;
-                              $payment->MpesaReceiptNumber = $mpesaReceiptNumber;
-                              $payment->ResultDesc = $resultDesc;
-                              $payment->save();
+                    if (!$payment) {
+                              Log::channel('mpesa')->error('Payment record not found for CheckoutRequestID: ' . $checkoutRequestId);
+                              return response()->json(['status' => 'error', 'message' => 'Payment record not found'], 404);
+                    }
 
-                              return response()->json([
-                                        'status' => 'success',
-                                        'message' => 'Payment processed successfully'
-                              ], 200);
+                    // Update payment record
+                    $payment->status = 'Paid';
+                    $payment->TransactionDate = $transactionDate;
+                    $payment->MpesaReceiptNumber = $mpesaReceiptNumber;
+                    $payment->ResultDesc = $resultDesc;
+                    $payment->save();
+
+                    // Generate a ticket
+                    try {
+                              $ticket = new Ticket();
+                              $ticket->name = session('ticketDetails.name', 'Guest');
+                              $ticket->email = session('ticketDetails.email', 'no-reply@example.com');
+                              $ticket->phone_number = $msisdn;
+                              $ticket->event_id = $payment->reference; // Event ID or Reference
+                              $ticket->price = $amount;
+                              $ticket->save();
+                    } catch (\Exception $e) {
+                              Log::channel('mpesa')->error('Failed to create ticket: ' . $e->getMessage());
+                              return response()->json(['status' => 'error', 'message' => 'Failed to create ticket'], 500);
+                    }
+
+                    // Send ticket confirmation email
+                    try {
+                              Mail::to($ticket->email)->send(new PaymentConfirmationMail($ticket, $callbackData));
+                    } catch (\Exception $e) {
+                              Log::channel('mpesa')->error('Failed to send email: ' . $e->getMessage());
                     }
 
                     return response()->json([
-                              'status' => 'error',
-                              'message' => 'Payment not found'
-                    ], 404);
+                              'status' => 'success',
+                              'message' => 'Payment processed successfully, ticket issued.',
+                              'ticket_id' => $ticket->id
+                    ], 200);
           }
+
 
           /**
            * Helper method to sanitize and format phone numbers.
