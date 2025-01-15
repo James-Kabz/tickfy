@@ -85,8 +85,8 @@ Route::middleware(['role:super-admin|admin'])->group(function () {
 
 Route::post('/payment', [PaymentController::class, 'initiatePayment'])->name('payment.initiatePayment');
 Route::get('/token', [PaymentController::class, 'token'])->name('token');
-Route::get('payments.initiateStkPush', [PaymentController::class, 'initiateStkPush'])->name('payments.initiateStkPush');
-Route::post('/payments/stkcallback', [PaymentController::class, 'stkcallback'])->name('payments.stkcallback');
+Route::get('/payments/initiateStkPush', [PaymentController::class, 'initiateStkPush'])->name('payments.initiateStkPush');
+Route::post('/payments/stkcallback', [PaymentController::class, 'stkCallback'])->name('payments.stkcallback');
 
 Route::get('/payment/{event}', [PaymentController::class, 'show'])->name('payment.show');
 

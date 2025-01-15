@@ -7,11 +7,13 @@ use App\Services\MpesaService;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PaymentConfirmationMail;
 use App\Models\Event;
-use App\Models\Ticket;
-use Carbon\Carbon;
+use App\Models\StkRequest;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
@@ -49,34 +51,156 @@ class PaymentController extends Controller
                     $Amount = 1;
                     $AccountReference = 'Tickfy';
                     $TransactionDesc = 'Payment for Event Ticket';
-                    $response = Http::withToken($accessToken)->post($url, [
-                              'BusinessShortCode' => env('MPESA_SHORTCODE'),
-                              'Password' => base64_encode(env('MPESA_SHORTCODE') . env('MPESA_PASSKEY') . now()->format('YmdHis')),
-                              'Timestamp' => now()->format('YmdHis'),
-                              'TransactionType' => 'CustomerPayBillOnline',
-                              'Amount' => $Amount,
-                              'PartyA' => $PhoneNumber,
-                              'PartyB' => env('MPESA_SHORTCODE'),
-                              'PhoneNumber' => $PhoneNumber,
-                              'CallBackURL' => 'https://a1ce-197-232-1-50.ngrok-free.app/payments/stkcallback',
-                              'AccountReference' => $AccountReference,
-                              'TransactionDesc' => $TransactionDesc,
-                    ]);
+
+                    try {
+                              $response = Http::withToken($accessToken)->post($url, [
+                                        'BusinessShortCode' => env('MPESA_SHORTCODE'),
+                                        'Password' => base64_encode(env('MPESA_SHORTCODE') . env('MPESA_PASSKEY') . now()->format('YmdHis')),
+                                        'Timestamp' => now()->format('YmdHis'),
+                                        'TransactionType' => 'CustomerPayBillOnline',
+                                        'Amount' => $Amount,
+                                        'PartyA' => $PhoneNumber,
+                                        'PartyB' => env('MPESA_SHORTCODE'),
+                                        'PhoneNumber' => $PhoneNumber,
+                                        'CallBackURL' => 'https://70ec-197-232-1-50.ngrok-free.app/payments/stkcallback',
+                                        'AccountReference' => $AccountReference,
+                                        'TransactionDesc' => $TransactionDesc,
+                              ]);
+                    } catch (Throwable $e) {
+                              return $e->getMessage();
+                    }
 
                     if ($response->failed()) {
                               throw new Exception('Failed to obtain access token: ' . $response->body());
                     }
 
-                    return $response->json();
+                    // return $response->json();
+
+                    $res = json_decode($response);
+                    $ResponseCode = $res->ResponseCode;
+                    if ($ResponseCode == 0) {
+                              $MerchantRequestID = $res->MerchantRequestID;
+                              $CheckoutRequestID = $res->CheckoutRequestID;
+                              $CustomerMessage = $res->CustomerMessage;
+
+                              // save to dtabase
+                              $payment = new StkRequest;
+                              $payment->phone = $PhoneNumber;
+                              $payment->amount = $Amount;
+                              $payment->reference = $AccountReference;
+                              $payment->description = $TransactionDesc;
+                              $payment->MerchantRequestID = $MerchantRequestID;
+                              $payment->CheckoutRequestID = $CheckoutRequestID;
+                              $payment->status = 'Requested';
+
+                              $payment->save();
+
+
+                              return $CustomerMessage;
+                    }
           }
 
-          public function stkCallback()
+          public function stkCallback(Request $request): JsonResponse
           {
-                    $data = file_get_contents('php://input');
-                    $callbackData = json_decode($data, true);
-                    $stkCallback = $callbackData['Body']['stkCallback'];
+                    // Log the received callback data for debugging
+                    Log::channel('mpesa')->info('Received STK Callback data: ' . json_encode($request->all()));
 
-                    Storage::disk('local')->put('stk_callback.json', json_encode($stkCallback, JSON_PRETTY_PRINT));
+                    // Extract callback data
+                    $callbackData = $request->input('Body.stkCallback', []);
+
+                    // Extract necessary fields
+                    $merchantRequestId = $callbackData['MerchantRequestID'] ?? null;
+                    $checkoutRequestId = $callbackData['CheckoutRequestID'] ?? null;
+                    $resultCode = $callbackData['ResultCode'] ?? null;
+                    $resultDesc = $callbackData['ResultDesc'] ?? null;
+
+                    // Handle failed payment callback
+                    if ($resultCode !== 0) {
+                              Log::channel('mpesa')->error('STK Callback failed with ResultCode: ' . $resultCode . ' - ' . $resultDesc);
+
+                              // Update payment status to failed in the database
+                              $payment = StkRequest::where('CheckoutRequestID', $checkoutRequestId)->first();
+                              if ($payment) {
+                                        $payment->status = 'failed';
+                                        $payment->ResultDesc = $resultDesc;
+                                        $payment->save();
+                              }
+
+                              return response()->json([
+                                        'status' => 'error',
+                                        'message' => $resultDesc
+                              ], 500);
+                    }
+
+                    // Handle successful payment callback
+                    $callbackMetadata = $callbackData['CallbackMetadata']['Item'] ?? [];
+                    $amount = null;
+                    $transactionDate = null;
+                    $mpesaReceiptNumber = null;
+                    $msisdn = null;
+
+                    foreach ($callbackMetadata as $item) {
+                              switch ($item['Name']) {
+                                        case 'Amount':
+                                                  $amount = $item['Value'];
+                                                  break;
+                                        case 'MpesaReceiptNumber':
+                                                  $mpesaReceiptNumber = $item['Value'];
+                                                  break;
+                                        case 'TransactionDate':
+                                                  $transactionDate = $item['Value'];
+                                                  break;
+                                        case 'PhoneNumber':
+                                                  $msisdn = $this->sanitizeAndFormatMobile($item['Value']);
+                                                  break;
+                                        default:
+                                                  // Handle other cases as needed
+                                                  break;
+                              }
+                    }
+
+                    // Log the processed data for successful payment
+                    Log::channel('mpesa')->info('Processed STK Callback data: ' . json_encode([
+                              'MerchantRequestID' => $merchantRequestId,
+                              'CheckoutRequestID' => $checkoutRequestId,
+                              'amount' => $amount,
+                              'TransactionDate' => $transactionDate,
+                              'MpesaReceiptNumber' => $mpesaReceiptNumber,
+                              'msisdn' => $msisdn
+                    ]));
+
+                    // Save payment details to the database using the MpesaCallback model
+                    $payment = StkRequest::where('CheckoutRequestID', $checkoutRequestId)->first();
+                    if ($payment) {
+                              $payment->status = 'Paid';
+                              $payment->TransactionDate = $transactionDate;
+                              $payment->MpesaReceiptNumber = $mpesaReceiptNumber;
+                              $payment->ResultDesc = $resultDesc;
+                              $payment->save();
+
+                              return response()->json([
+                                        'status' => 'success',
+                                        'message' => 'Payment processed successfully'
+                              ], 200);
+                    }
+
+                    return response()->json([
+                              'status' => 'error',
+                              'message' => 'Payment not found'
+                    ], 404);
+          }
+
+          /**
+           * Helper method to sanitize and format phone numbers.
+           */
+          private function sanitizeAndFormatMobile($phoneNumber)
+          {
+                    // Add your logic here to sanitize and format the phone number
+                    return preg_replace(
+                              '/[^0-9]/',
+                              '',
+                              $phoneNumber
+                    ); // Example to remove non-numeric characters
           }
 
           public function show(Request $request, Event $event)
