@@ -110,8 +110,14 @@
             @if ($event->ticket_status === 'Open')
                 <div class="w-full md:w-1/2 bg-white shadow-md rounded-lg p-6">
                     <h2 class="text-2xl font-semibold mb-4">Book Your Tickets</h2>
-                    <form action="{{ route('payment.show', $event->id) }}" method="GET" id="bookingForm">
+                    <form action="{{ route('tickets.store', $event->id) }}" method="POST" id="bookingForm">
                         @csrf
+
+                        <div id="loader" style="display: none;"
+                            class="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+                            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+                        </div>
+
                         <table class="table-auto w-full border border-gray-300 mb-4">
                             <thead>
                                 <tr>
@@ -126,7 +132,8 @@
                                     <tr>
                                         <td class="py-2 px-4 border-b">{{ $ticketType->name }}</td>
                                         <td class="text-center py-2 px-4 border-b">
-                                            {{ number_format($ticketType->price, 2) }}</td>
+                                            {{ number_format($ticketType->price, 2) }}
+                                        </td>
                                         <td class="text-center py-2 px-4 border-b">
                                             <input type="hidden" name="ticket_types[{{ $ticketType->id }}][price]"
                                                 value="{{ $ticketType->price }}">
@@ -150,6 +157,7 @@
                             <h3 class="text-lg font-bold">Total:</h3>
                             <h3 class="text-lg font-bold" id="grandTotal">KES 0.00</h3>
                         </div>
+
                         <div class="mb-4">
                             <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
                             <input type="text" id="name" name="name"
@@ -182,6 +190,7 @@
             @endif
 
 
+
         </div>
     </div>
 
@@ -189,6 +198,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const quantityInputs = document.querySelectorAll('.quantity-input');
             const grandTotalElement = document.getElementById('grandTotal');
+            const grandTotalInput = document.getElementById('grand_total_input');
 
             function updateTotal() {
                 let grandTotal = 0;
@@ -197,13 +207,10 @@
                     const row = input.closest('tr');
 
                     // Find the hidden price input inside the same row
-                    const priceInput = row.querySelector('input[type="hidden"]');
+                    const priceInput = row.querySelector('input[name$="[price]"]');
                     const price = parseFloat(priceInput.value) || 0; // Ensure it's a valid number
                     const quantity = parseInt(input.value) || 0;
                     const ticketTotal = row.querySelector('.ticket-total');
-
-                    // Debugging log
-                    console.log('Price:', price, 'Quantity:', quantity);
 
                     if (isNaN(price) || isNaN(quantity)) {
                         ticketTotal.textContent = "0.00";
@@ -216,6 +223,7 @@
                 });
 
                 grandTotalElement.textContent = `KES ${grandTotal.toFixed(2)}`;
+                grandTotalInput.value = grandTotal;
             }
 
             document.querySelectorAll('.quantity-increase').forEach(button => {
@@ -240,7 +248,13 @@
                 input.addEventListener('input', updateTotal);
             });
 
+            // Initialize totals on page load
             updateTotal();
         });
+        document.getElementById('bookingForm').addEventListener('submit', function() {
+            const loader = document.getElementById('loader');
+            loader.style.display = 'block';
+        });
     </script>
+
 </x-app-layout>

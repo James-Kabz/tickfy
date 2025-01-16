@@ -55,7 +55,7 @@ class PaymentController extends Controller
                               $accessToken = $this->token();
                               $url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
 
-                              $PhoneNumber = '254740289578';
+                              $PhoneNumber = 254740289578;
                               $Amount = 1;
                               $AccountReference = 'Tickfy';
                               $TransactionDesc = 'Payment for Event Ticket';
@@ -69,7 +69,7 @@ class PaymentController extends Controller
                                         'PartyA' => $PhoneNumber,
                                         'PartyB' => env('MPESA_SHORTCODE'),
                                         'PhoneNumber' => $PhoneNumber,
-                                        'CallBackURL' => 'https://70ec-197-232-1-50.ngrok-free.app/payments/stkcallback',
+                                        'CallBackURL' => 'https://b1f1-197-232-1-50.ngrok-free.app/payments/stkcallback',
                                         'AccountReference' => $AccountReference,
                                         'TransactionDesc' => $TransactionDesc,
                               ]);
@@ -150,7 +150,6 @@ class PaymentController extends Controller
                     $amount = null;
                     $transactionDate = null;
                     $mpesaReceiptNumber = null;
-                    $msisdn = null;
 
                     foreach ($callbackMetadata as $item) {
                               switch ($item['Name']) {
@@ -162,9 +161,6 @@ class PaymentController extends Controller
                                                   break;
                                         case 'TransactionDate':
                                                   $transactionDate = $item['Value'];
-                                                  break;
-                                        case 'PhoneNumber':
-                                                  $msisdn = $this->sanitizeAndFormatMobile($item['Value']);
                                                   break;
                               }
                     }
@@ -183,33 +179,16 @@ class PaymentController extends Controller
                     $payment->ResultDesc = $resultDesc;
                     $payment->save();
 
-                    // Generate a ticket
-                    try {
-                              $ticket = new Ticket();
-                              $ticket->name = session('ticketDetails.name', 'Guest');
-                              $ticket->email = session('ticketDetails.email', 'no-reply@example.com');
-                              $ticket->phone_number = $msisdn;
-                              $ticket->event_id = $payment->reference; // Event ID or Reference
-                              $ticket->price = $amount;
-                              $ticket->save();
-                    } catch (\Exception $e) {
-                              Log::channel('mpesa')->error('Failed to create ticket: ' . $e->getMessage());
-                              return response()->json(['status' => 'error', 'message' => 'Failed to create ticket'], 500);
-                    }
-
-                    // Send ticket confirmation email
-                    try {
-                              Mail::to($ticket->email)->send(new PaymentConfirmationMail($ticket, $callbackData));
-                    } catch (\Exception $e) {
-                              Log::channel('mpesa')->error('Failed to send email: ' . $e->getMessage());
-                    }
-
+                    // Redirect to ticket confirmation route
                     return response()->json([
                               'status' => 'success',
-                              'message' => 'Payment processed successfully, ticket issued.',
-                              'ticket_id' => $ticket->id
+                              'message' => 'Payment processed successfully.',
+                              'redirect_url' => route('ticket.confirmation', ['ticket_id' => $payment->reference]), // Assuming 'reference' is ticket ID
                     ], 200);
           }
+
+
+
 
 
           /**
@@ -257,4 +236,13 @@ class PaymentController extends Controller
                               'grandTotal' => $grandTotal,
                     ]);
           }
+
+          // public function show($eventId)
+          // {
+          //           $event = Event::findOrFail($eventId);
+          //           $ticketDetails = session('ticketDetails', []);
+          //           $grandTotal = session('grandTotal', 0);
+
+          //           return view('payment', compact('event', 'ticketDetails', 'grandTotal'));
+          // }
 }

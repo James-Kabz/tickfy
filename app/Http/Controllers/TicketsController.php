@@ -48,7 +48,7 @@ class TicketsController extends Controller
     {
         $ticket = Ticket::findOrFail($ticketId);
         $eventName = $ticket->event->name;
-        return view('ticket.confirmation', compact('ticket','eventName'));
+        return view('ticket.confirmation', compact('ticket', 'eventName'));
     }
 
     /**
@@ -70,7 +70,7 @@ class TicketsController extends Controller
 
         // Check if tickets are still open
         if ($event->ticket_status !== 'Open') {
-            return redirect()->back()->with('success', 'Tickets are no longer available for this event.');
+            return redirect()->back()->with('error', 'Tickets are no longer available for this event.');
         }
 
         // Loop through ticket types and save tickets
@@ -90,7 +90,7 @@ class TicketsController extends Controller
                         'price' => $ticketType->price,
                         'ticket_type_id' => $ticketType->id,
                         'transaction_id' => $transactionId,
-                        'quantity' => 1,
+                        'quantity' => 1, // Each ticket is counted individually
                         'scanned' => false,
                         'event_id' => $event->id,
                     ]);
@@ -98,6 +98,8 @@ class TicketsController extends Controller
             }
         }
 
-        return redirect()->back()->with('success', 'Your tickets have been successfully booked!');
+        // Redirect to the payment.show route
+        return redirect()->route('payment.show', ['event' => $eventId])->with('success', 'Your tickets have been successfully booked!');
     }
+
 }
