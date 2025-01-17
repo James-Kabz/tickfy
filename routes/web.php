@@ -2,12 +2,15 @@
 
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\EventsController;
+use App\Http\Controllers\MpesaController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\TicketsController;
 use App\Http\Controllers\TicketTypesController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
@@ -19,6 +22,7 @@ Route::get('/', [EventsController::class, 'welcome'])->name('welcome'); // Publi
 Route::get('events', [EventsController::class, 'index'])->name('events.index'); // Public list of events
 Route::get('events/{event}', [EventsController::class, 'show'])->name('events.show'); // Public view of a single event\
 Route::post('/events/{event}/tickets', [TicketsController::class, 'store'])->name('tickets.store');
+Route::get('/events/{event}/edit', [EventsController::class, 'edit'])->name('events.edit');
 
 // Search events
 Route::get('events.search', [EventsController::class, 'search'])->name('events.search'); // Fix route
@@ -79,5 +83,17 @@ Route::middleware(['role:super-admin|admin'])->group(function () {
     Route::resource('ticket-types', TicketTypesController::class);
     Route::get('ticket-types/{ticketType}/delete', [TicketTypesController::class, 'destroy']);
 });
+
+Route::post('/payment', [PaymentController::class, 'initiatePayment'])->name('payment.initiatePayment');
+Route::get('/token', [PaymentController::class, 'token'])->name('token');
+Route::get('/payments/initiateStkPush', [PaymentController::class, 'initiateStkPush'])->name('payments.initiateStkPush');
+// Route::post('/payments/initiateStkPush', [PaymentController::class, 'handleStkCallback'])->name('payments.stkCallback');
+Route::post('/payments/stkcallback', [PaymentController::class, 'stkCallback'])->name('payments.stkcallback');
+
+Route::get('/payment/{event}', [PaymentController::class, 'show'])->name('payment.show');
+Route::get('/payments/status', [PaymentController::class, 'paymentStatus'])->name('ticket.status');
+
+Route::get('/ticket/confirmation/{ticket_id}', [TicketsController::class, 'view'])->name('ticket.confirmation');
+
 
 require __DIR__ . '/auth.php';

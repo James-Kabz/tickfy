@@ -16,7 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
-    })
+    $middleware->validateCsrfTokens(except: [
+        'payments/*',
+        'http://example.com/foo/bar',
+        'http://example.com/foo/*',
+    ]);
+    }) 
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
