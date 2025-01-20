@@ -54,52 +54,71 @@ class TicketsController extends Controller
     /**
      * Store a newly created ticket booking in storage.
      */
-    public function store(Request $request, $eventId)
-    {
-        // Validate the request
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'phone_number' => 'required|string|max:15',
-            'ticket_types' => 'required|array',
-            'ticket_types.*.quantity' => 'required|integer|min:0',
-        ]);
+public function store(Request $request, $eventId)
+{
+    // Validate the request
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email',
+        'phone_number' => 'required|string|max:15',
+        'ticket_types' => 'required|array',
+        'ticket_types.*.quantity' => 'required|integer|min:0',
+    ]);
 
-        // Fetch the event
-        $event = Event::findOrFail($eventId);
+    // Fetch the event
+    $event = Event::findOrFail($eventId);
 
-        // Check if tickets are still open
-        if ($event->ticket_status !== 'Open') {
-            return redirect()->back()->with('error', 'Tickets are no longer available for this event.');
-        }
+    // Check if tickets are still open
+    if ($event->ticket_status !== 'Open') {
+        return redirect()->back()->with('error', 'Tickets are no longer available for this event.');
+    }
 
-        // Loop through ticket types and save tickets
-        foreach ($request->ticket_types as $typeId => $ticketData) {
-            $ticketType = TicketType::find($typeId);
+    $ticketDetails = [];
+    $grandTotal = 0;
 
-            if ($ticketType && $ticketData['quantity'] > 0) {
-                // Generate a unique transaction ID for the booking
-                $transactionId = Str::uuid();
+    // Loop through ticket types and save tickets
+    foreach ($request->ticket_types as $typeId => $ticketData) {
+        $ticketType = TicketType::find($typeId);
 
-                // Save tickets for each ticket type
-                for ($i = 0; $i < $ticketData['quantity']; $i++) {
-                    Ticket::create([
-                        'name' => $request->name,
-                        'email' => $request->email,
-                        'phone_number' => $request->phone_number,
-                        'price' => $ticketType->price,
-                        'ticket_type_id' => $ticketType->id,
-                        'transaction_id' => $transactionId,
-                        'quantity' => 1, // Each ticket is counted individually
-                        'scanned' => false,
-                        'event_id' => $event->id,
-                    ]);
-                }
+        if ($ticketType && $ticketData['quantity'] > 0) {
+            $transactionId = Str::uuid();
+
+            $ticketDetails[$typeId] = [
+                'name' => $ticketType->name,
+                'quantity' => $ticketData['quantity'],
+                'price' => $ticketType->price,
+                'subtotal' => $ticketData['quantity'] * $ticketType->price,
+            ];
+
+            $grandTotal += $ticketDetails[$typeId]['subtotal'];
+
+            for ($i = 0; $i < $ticketData['quantity']; $i++) {
+                Ticket::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone_number' => $request->phone_number,
+                    'price' => $ticketType->price,
+                    'ticket_type_id' => $ticketType->id,
+                    'transaction_id' => $transactionId,
+                    'quantity' => 1,
+                    'scanned' => false,
+                    'event_id' => $event->id,
+                ]);
             }
         }
-
-        // Redirect to the payment.show route
-        return redirect()->route('payment.show', ['event' => $eventId])->with('success', 'Your tickets have been successfully booked!');
     }
+
+    // Redirect to the payment page with data
+    return redirect()->route('payment.show', ['event' => $eventId])
+        ->with([
+            'ticketDetails' => [
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone_number' => $request->phone_number,
+                'tickets' => $ticketDetails,
+                'grandTotal' => $grandTotal,
+            ],
+        ]);
+}
 
 }

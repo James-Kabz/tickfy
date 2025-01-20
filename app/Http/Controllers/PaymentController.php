@@ -18,19 +18,27 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
-          // public function show(Request $request, Event $event)
-          // {
-          //           $ticketDetails = $request->input('ticket_types', []);
-          //           // $tickets = $request->
-          //           $grandTotal = $request->input('grand_total', 0);
+public function show($eventId)
+{
+    $event = Event::findOrFail($eventId);
 
-          //           return view('payment', compact('event', 'ticketDetails', 'grandTotal'));
-          // }
+    $ticketDetails = session('ticketDetails', null);
+
+    if (!$ticketDetails) {
+        return redirect()->route('events.show', $eventId)->with('error', 'No ticket details found.');
+    }
+
+    return view('payment', [
+        'event' => $event,
+        'ticketDetails' => $ticketDetails,
+    ]);
+}
+
 
           public function token()
           {
-                    $consumerKey = 'b7KnMM6MLAeIynsJoZ38WjJRXACqNXGEJQdKGJwydf7lKRW3';
-                    $consumerSecret = 'TIC42PSb5qsLBGQ7uuWhQKxF1uRsHeCfPajKKYUWM3h2qOb205qMGWG21cpTX3j2';
+                    $consumerKey = 'TFDmQGinhsNcND76vx2D4SHBvx1Qk06nbsozonkm0rqv56uR';
+                    $consumerSecret = 'a5z2QeYN3Whl5585tV8bcnVsIyHlQ6tNldQWUFg6VfHnrPXPKUzFaby97Q6QtupO';
                     $url = 'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
 
                     $response = Http::withBasicAuth($consumerKey, $consumerSecret)->get($url);
@@ -69,7 +77,7 @@ class PaymentController extends Controller
                                         'PartyA' => $PhoneNumber,
                                         'PartyB' => env('MPESA_SHORTCODE'),
                                         'PhoneNumber' => $PhoneNumber,
-                                        'CallBackURL' => 'https://b1f1-197-232-1-50.ngrok-free.app/payments/stkcallback',
+                                        'CallBackURL' => 'https://475d-197-232-1-50.ngrok-free.app/payments/stkcallback',
                                         'AccountReference' => $AccountReference,
                                         'TransactionDesc' => $TransactionDesc,
                               ]);
@@ -204,45 +212,4 @@ class PaymentController extends Controller
                     ); // Example to remove non-numeric characters
           }
 
-          public function show(Request $request, Event $event)
-          {
-                    $ticketDetails = $request->input('ticket_types', []);
-                    $grandTotal = 0;
-
-                    // Calculate the grand total from ticket details
-                    foreach ($ticketDetails as $ticketTypeId => $details) {
-                              $ticket = $event->ticketTypes->find($ticketTypeId);
-                              if ($ticket) {
-                                        $price = $ticket->price; // Assuming each ticket type has a 'price' attribute
-                                        $quantity = $details['quantity'] ?? 0;
-                                        $grandTotal += $price * $quantity;
-                              }
-                    }
-
-                    // Store ticket and payment details in session
-                    session([
-                              'ticketDetails' => [
-                                        'name' => $request->input('name'),
-                                        'phone_number' => $request->input('phone_number'),
-                                        'email' => $request->input('email'),
-                                        'tickets' => $ticketDetails, // Include ticket details for later use
-                              ],
-                              'grandTotal' => $grandTotal,
-                    ]);
-
-                    return view('payment', [
-                              'event' => $event,
-                              'ticketDetails' => $ticketDetails,
-                              'grandTotal' => $grandTotal,
-                    ]);
-          }
-
-          // public function show($eventId)
-          // {
-          //           $event = Event::findOrFail($eventId);
-          //           $ticketDetails = session('ticketDetails', []);
-          //           $grandTotal = session('grandTotal', 0);
-
-          //           return view('payment', compact('event', 'ticketDetails', 'grandTotal'));
-          // }
 }

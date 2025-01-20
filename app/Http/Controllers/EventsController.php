@@ -72,7 +72,7 @@ class EventsController extends Controller
             ->with('success', 'Event created successfully. Now, add ticket types.');
     }
 
-    public function edit(Event $event)
+    public function edit($event)
     {
         $event = Event::findOrFail($event);
         return view('events.edit', ['event' => $event]);

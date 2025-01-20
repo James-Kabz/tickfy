@@ -85,22 +85,18 @@
                 <!-- Actions -->
                 <div class="flex flex-row space-x-5 mt-5">
                     @can('edit event')
-                        <a href="{{ route('events.edit', ['event' => $event->id]) }}"
+                        </a>
+                        <a href="{{ route('events.edit', $event->id) }}"
                             class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                             <i class="fas fa-edit"></i>
                         </a>
                     @endcan
 
                     @can('delete event')
-                        <form action="{{ route('events.destroy', $event->id) }}" method="POST" class="inline-block"
-                            onsubmit="return confirm('Are you sure?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit"
-                                class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+                        <a href="{{ url('events/' . $event->id . '/delete') }}"
+                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                            <i class="fas fa-trash"></i>
+                        </a>
                     @endcan
                 </div>
 

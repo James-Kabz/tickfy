@@ -41,44 +41,52 @@
                 <div class="flex mt-5 items-center justify-center p-6 bg-blue-100 border border-solid border-blue-600 text-blue-700 text-center font-bold rounded-lg shadow-lg">
                     <p class="text-xl">{{ __('No Events found.') }}</p>
                 </div>
+            @else<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    @foreach ($events as $event)
+        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+            @if ($event->image)
+                <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->name }}" class="w-full h-48 object-cover">
             @else
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    @foreach ($events as $event)
-                        <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-                            @if ($event->image)
-                                <img src="{{ asset('storage/' . $event->image) }}" alt="{{ $event->name }}"
-                                    class="w-full h-48 object-cover">
-                            @else
-                                <img src="https://via.placeholder.com/300x200" alt="{{ $event->name }}"
-                                    class="w-full h-48 object-cover">
-                            @endif
-                            <div class="p-4">
-                                <h3 class="text-lg font-bold text-gray-800">{{ $event->name }}</h3>
-                                <p class="text-sm text-gray-600 mt-2">
-                                    <i class="fas fa-calendar-alt mr-1"></i> {{ $event->date }}
-                                </p>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    <i class="fas fa-map-marker-alt mr-1"></i> {{ $event->location }}
-                                </p>
-                                <p class="text-gray-700 mt-3">
-                                    {{ Str::limit($event->description, 100) }}
-                                </p>
-                                <div class="mt-4 flex justify-between">
-                                    <a href="{{ route('events.show', $event->id) }}"
-                                        class=" bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                                        Learn More
-                                    </a>
-                                    @can('view tickets')
-                                        <a href="{{ route('tickets.show', $event->id) }}"
-                                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
-                                            View Purchased Tickets
-                                        </a>
-                                    @endcan
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+                <img src="https://via.placeholder.com/300x200" alt="{{ $event->name }}" class="w-full h-48 object-cover">
+            @endif
+            <div class="p-4">
+                <h3 class="text-lg font-bold text-gray-800">{{ $event->name }}</h3>
+                <p class="text-sm text-gray-600 mt-2">
+                    <i class="fas fa-calendar-alt mr-1"></i> {{ $event->date }}
+                </p>
+                <p class="text-sm text-gray-600 mt-1">
+                    <i class="fas fa-map-marker-alt mr-1"></i> {{ $event->location }}
+                </p>
+                
+                <!-- Display Ticket Price -->
+                <p class="text-sm text-gray-600 mt-1">
+                    @if ($event->ticketTypes->isNotEmpty())
+                        <i class="fas fa-ticket-alt mr-1"></i> 
+                        Starting from 
+                        <span class="font-bold text-green-600">${{ $event->ticketTypes->min('price') }}</span>
+                    @else
+                        <span class="text-red-500">Tickets not available</span>
+                    @endif
+                </p>
+
+                <p class="text-gray-700 mt-3">
+                    {{ Str::limit($event->description, 100) }}
+                </p>
+                <div class="mt-4 flex justify-between">
+                    <a href="{{ route('events.show', $event->id) }}" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                        Learn More
+                    </a>
+                    @can('view tickets')
+                        <a href="{{ route('tickets.show', $event->id) }}" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                            View Purchased Tickets
+                        </a>
+                    @endcan
                 </div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
             @endif
         </div>
     </main>

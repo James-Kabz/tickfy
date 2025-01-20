@@ -23,7 +23,7 @@
                         <td class="text-center py-2 px-4 border-b">{{ \Carbon\Carbon::parse($event->date)->format('d M Y') }}</td>
                         <td class="text-center py-2 px-4 border-b">{{ $event->tickets->count() }}</td>
                         <td class="text-center py-2 px-4 border-b">
-                            <a href="{{ route('tickets.show', $event->id) }}" class="text-blue-500">View Tickets</a>
+                            <a href="{{ route('events.show', $event->id) }}" class="text-blue-500">View Tickets</a>
                         </td>
                     </tr>
                 @endforeach

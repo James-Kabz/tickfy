@@ -44,11 +44,11 @@
                                 {{ __('Ticket Types') }}
                             </x-nav-link>
                         @endcan
-                        @can('view tickets')
+                        {{-- @can('view tickets')
                             <x-nav-link :href="route('tickets.index')" :active="request()->routeIs('tickets.*')">
                                 {{ __('Tickets') }}
                             </x-nav-link>
-                        @endcan
+                        @endcan --}}
                     @endauth
                 </div>
             </div>

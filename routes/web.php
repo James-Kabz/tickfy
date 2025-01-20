@@ -22,8 +22,6 @@ Route::get('/', [EventsController::class, 'welcome'])->name('welcome'); // Publi
 Route::get('events', [EventsController::class, 'index'])->name('events.index'); // Public list of events
 Route::get('events/{event}', [EventsController::class, 'show'])->name('events.show'); // Public view of a single event\
 Route::post('/events/{event}/tickets', [TicketsController::class, 'store'])->name('tickets.store');
-Route::get('/events/{event}/edit', [EventsController::class, 'edit'])->name('events.edit');
-
 // Search events
 Route::get('events.search', [EventsController::class, 'search'])->name('events.search'); // Fix route
 // Email Verification
@@ -64,8 +62,8 @@ Route::middleware(['role:super-admin|admin'])->group(function () {
     Route::get('users/{userId}/delete', [UserController::class, 'destroy']);
 
     // Events
-    Route::resource('events', EventsController::class)->except(['index', 'show']); // Exclude public routes
-    Route::get('events/{event}/delete', [EventsController::class, 'destroy'])->name('events.destroy');
+    Route::get('events', [EventsController::class, 'index'])->name('events.index');
+    Route::get('events/{eventId}/delete', [\App\Http\Controllers\EventsController::class, 'destroy']);
     Route::get('events/{event}/edit', [EventsController::class, 'edit'])->name('events.edit');
     Route::get('events.create', [EventsController::class, 'create'])->name('events.create');
     // Search events
